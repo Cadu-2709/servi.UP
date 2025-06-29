@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Serviços</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Bibliotecas de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .view { display: none; }
+        .view.active { display: block; }
+        #pdf-container { position: absolute; left: -9999px; top: 0; z-index: -10; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5; /* Cor indigo */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="app-container" class="max-w-2xl mx-auto p-4">
+
+        <!-- ===== ECRÃ DE CARREGAMENTO INICIAL ===== -->
+        <div id="view-loading" class="view active">
+            <div class="flex flex-col items-center justify-center min-h-screen">
+                <div class="loader"></div>
+                <p class="mt-4 text-gray-600">A carregar...</p>
+            </div>
+        </div>
+
+        <!-- ===== ECRÃ DE LOGIN ===== -->
+        <div id="view-login" class="view">
+            <div class="flex flex-col items-center justify-center min-h-screen">
+                <div class="w-full max-w-sm bg-white p-8 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
+                    <form id="login-form" class="space-y-4">
+                        <div>
+                            <label for="login-email" class="block font-medium mb-1">Email</label>
+                            <input type="email" id="login-email" class="w-full p-2 border rounded-md" required>
+                        </div>
+                        <div>
+                            <label for="login-password" class="block font-medium mb-1">Senha</label>
+                            <input type="password" id="login-password" class="w-full p-2 border rounded-md" required>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Entrar</button>
+                    </form>
+                    <p class="text-center mt-4 text-sm">
+                        Não tem uma conta? <a href="mailto:seu-email-de-suporte@exemplo.com" class="text-indigo-600 hover:underline">Contacte o suporte</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ===== CONTEÚDO PRINCIPAL (visível após login) ===== -->
+        <div id="main-content" class="hidden">
+            <!-- ===== TELA 1: PAINEL PRINCIPAL ===== -->
+            <div id="view-dashboard" class="view active pt-8 md:pt-12">
+                <header class="mb-10 text-center">
+                    <img id="logo-main" src="https://placehold.co/200x100/4F46E5/FFFFFF?text=Logo" alt="Logo da Empresa" class="h-24 mx-auto mb-6 object-contain">
+                    <button id="logout-btn" class="mt-4 text-sm text-red-600 hover:underline">Sair</button>
+                </header>
+
+                <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+                    <button data-view="view-budget-form" class="nav-btn bg-indigo-600 text-white p-4 rounded-lg shadow-md hover:bg-indigo-700 transition flex flex-col items-center justify-center h-32">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 mb-2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                        <span class="font-semibold">Novo Orçamento</span>
+                    </button>
+                    <button data-view="view-budgets-list" class="nav-btn bg-white p-4 rounded-lg shadow-md hover:bg-gray-50 transition flex flex-col items-center justify-center h-32">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 mb-2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                        <span class="font-semibold">Orçamentos</span>
+                    </button>
+                    <button data-view="view-clients-list" class="nav-btn bg-white p-4 rounded-lg shadow-md hover:bg-gray-50 transition flex flex-col items-center justify-center h-32">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 mb-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        <span class="font-semibold">Meus Clientes</span>
+                    </button>
+                    <button data-view="view-expenses-list" class="nav-btn bg-white p-4 rounded-lg shadow-md hover:bg-gray-50 transition flex flex-col items-center justify-center h-32">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 mb-2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        <span class="font-semibold">Despesas</span>
+                    </button>
+                    <div class="col-span-2">
+                        <button data-view="view-reports" class="nav-btn bg-white p-4 rounded-lg shadow-md hover:bg-gray-50 transition flex flex-col items-center justify-center h-32 w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 mb-2"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20V16"></path></svg>
+                            <span class="font-semibold">Relatórios</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="next-appointment-card" class="mt-6 bg-white p-4 rounded-lg shadow-md hidden">
+                    <h3 class="font-bold text-lg mb-2 text-indigo-700">Próximo Agendamento</h3>
+                    <p id="next-appointment-details"></p>
+                </div>
+            </div>
+
+            <div id="view-clients-list" class="view">
+                <header class="flex items-center justify-between mb-4">
+                    <button data-view="view-dashboard" class="nav-btn p-2 rounded-full hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m15 18-6-6 6-6"/></svg></button>
+                    <h2 class="text-2xl font-bold">Meus Clientes</h2>
+                    <button id="add-client-btn" class="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                </header>
+                <div id="clients-list-container" class="space-y-3"></div>
+            </div>
+            
+            <div id="view-client-form" class="view">
+                <header class="flex items-center mb-4">
+                    <button data-view="view-clients-list" class="nav-btn p-2 rounded-full hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m15 18-6-6 6-6"/></svg></button>
+                    <h2 id="client-form-title" class="text-2xl font-bold ml-4">Novo Cliente</h2>
+                </header>
+                <form id="client-form" class="space-y-4 bg-white p-6 rounded-lg shadow"><input type="hidden" id="client-id"><div><label for="client-name" class="block font-medium mb-1">Nome do Cliente</label><input type="text" id="client-name" class="w-full p-2 border rounded-md" required></div><div><label for="client-phone" class="block font-medium mb-1">Celular (Opcional)</label><input type="tel" id="client-phone" class="w-full p-2 border rounded-md"></div><div><label for="client-data" class="block font-medium mb-1">Dados (Senhas, DVR, etc.)</label><textarea id="client-data" rows="4" class="w-full p-2 border rounded-md" placeholder="Ex: DVR: intelbras_123 / senha1234"></textarea></div><div class="flex gap-4"><button type="button" id="delete-client-btn" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 hidden">Excluir</button><button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Salvar Cliente</button></div></form>
+                
+                <div class="mt-8">
+                    <button id="toggle-history-btn" class="w-full bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-md hover:bg-gray-300 mb-4">Ver Histórico de Orçamentos</button>
+                    <div id="client-history-container" class="space-y-3 hidden"></div>
+                </div>
+            </div>
+
+            <div id="view-budget-form" class="view">
+                <header class="flex items-center mb-4"><button data-view="view-dashboard" class="nav-btn p-2 rounded-full hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m15 18-6-6 6-6"/></svg></button><h2 id="budget-form-title" class="text-2xl font-bold ml-4">Novo Orçamento</h2></header>
+                <form id="budget-form" class="space-y-6 bg-white p-6 rounded-lg shadow"><input type="hidden" id="budget-id">
+                    <div>
+                        <label for="budget-title" class="block font-medium mb-1">Título do Orçamento <span class="text-gray-500 text-sm">(Uso Interno)</span></label>
+                        <input type="text" id="budget-title" class="w-full p-2 border rounded-md" placeholder="Ex: Instalação Câmeras Condomínio" required>
+                    </div>
+                    <div><label for="budget-client-id" class="block font-medium mb-1">Cliente</label><select id="budget-client-id" class="w-full p-2 border rounded-md" required><option value="">-- Selecione um Cliente --</option><option value="new">-- Cadastrar Novo Cliente --</option></select></div><div id="new-client-fields" class="hidden space-y-2 border-l-4 border-indigo-200 pl-4"><input type="text" id="budget-new-client-name" placeholder="Nome do Novo Cliente" class="w-full p-2 border rounded-md"><input type="tel" id="budget-new-client-phone" placeholder="Celular (Opcional)" class="w-full p-2 border rounded-md"></div><div class="space-y-2"><h3 class="font-bold text-lg">Serviços</h3><div id="services-container" class="space-y-2"></div><button type="button" id="add-service-btn" class="text-indigo-600 font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Adicionar Serviço</button><div id="services-total-manual-container" class="mt-2 hidden"><label for="total-services-manual" class="block font-medium text-sm">Valor Total dos Serviços (se não detalhado)</label><input type="number" step="0.01" id="total-services-manual" class="w-full p-2 border rounded-md" placeholder="Ex: 500.00"></div></div><div class="space-y-2"><h3 class="font-bold text-lg">Produtos</h3><div id="products-container" class="space-y-2"></div><button type="button" id="add-product-btn" class="text-indigo-600 font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Adicionar Produto</button><div id="products-total-manual-container" class="mt-2 hidden"><label for="total-products-manual" class="block font-medium text-sm">Valor Total dos Produtos (se não detalhado)</label><input type="number" step="0.01" id="total-products-manual" class="w-full p-2 border rounded-md" placeholder="Ex: 850.50"></div></div><div class="border-t pt-4 space-y-4"><div class="text-2xl font-bold text-right"><span>TOTAL:</span><span id="total-budget-amount">R$ 0,00</span></div><div><h4 class="font-semibold mb-2">Apresentação para o cliente no PDF:</h4><div class="flex gap-4"><label class="flex items-center"><input type="radio" name="pdf-presentation" value="detailed" class="mr-2" checked> Mostrar valores individuais</label><label class="flex items-center"><input type="radio" name="pdf-presentation" value="total_only" class="mr-2"> Ocultar valores individuais</label></div></div></div><button type="submit" class="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 font-bold">Salvar Orçamento</button></form>
+            </div>
+            
+            <div id="view-budgets-list" class="view">
+                <header class="flex items-center justify-between mb-4"><button data-view="view-dashboard" class="nav-btn p-2 rounded-full hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m15 18-6-6 6-6"/></svg></button><h2 class="text-2xl font-bold">Orçamentos</h2><div></div></header>
+                <div id="budget-filters" class="flex justify-center gap-2 mb-4 border-b pb-2"><button class="filter-btn-status px-3 py-1 rounded-full text-sm font-semibold bg-indigo-600 text-white" data-status="all">Todos</button><button class="filter-btn-status px-3 py-1 rounded-full text-sm font-semibold bg-gray-200" data-status="pending">Em Aberto</button><button class="filter-btn-status px-3 py-1 rounded-full text-sm font-semibold bg-gray-200" data-status="scheduled">Agendados</button><button class="filter-btn-status px-3 py-1 rounded-full text-sm font-semibold bg-gray-200" data-status="completed">Concluídos</button></div>
+                <div id="budgets-list-container" class="space-y-3"></div>
+            </div>
+
+            <div id="view-reports" class="view">
+                <header class="flex items-center mb-4"><button data-view="view-dashboard" class="nav-btn p-2 rounded-full hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m15 18-6-6 6-6"/></svg></button><h2 class="text-2xl font-bold ml-4">Relatórios</h2></header>
+                <div class="bg-white p-4 rounded-lg shadow"><div id="report-filters" class="flex justify-center gap-2 mb-4 border-b pb-2"><button class="filter-btn-period px-3 py-1 rounded-full text-sm font-semibold bg-indigo-600 text-white" data-period="month">Este Mês</button><button class="filter-btn-period px-3 py-1 rounded-full text-sm font-semibold bg-gray-200" data-period="week">Últimos 7 Dias</button><button class="filter-btn-period px-3 py-1 rounded-full text-sm font-semibold bg-gray-200" data-period="custom">Personalizado</button></div><div id="custom-period-fields" class="hidden flex gap-4 mb-4"><input type="date" id="start-date" class="w-full p-2 border rounded-md"><input type="date" id="end-date" class="w-full p-2 border rounded-md"></div><div class="grid grid-cols-2 gap-4 text-center"><div class="bg-green-100 p-4 rounded-lg"><h4 class="text-sm font-semibold text-green-800">Total Faturado</h4><p id="report-total-billed" class="text-3xl font-bold text-green-800">R$ 0,00</p></div><div class="bg-red-100 p-4 rounded-lg"><h4 class="text-sm font-semibold text-red-800">Total Despesas</h4><p id="report-total-expenses" class="text-3xl font-bold text-red-800">R$ 0,00</p></div></div><div class="bg-blue-100 p-4 rounded-lg mt-4 text-center"><h4 class="text-sm font-semibold text-blue-800">Lucro Líquido</h4><p id="report-net-profit" class="text-3xl font-bold text-blue-800">R$ 0,00</p></div>
+                <div class="mt-6"><h3 class="text-lg font-semibold mb-2">Detalhes do Período</h3><div id="details-list-container" class="space-y-2"></div></div>
+                </div>
+            </div>
+
+            <div id="view-expenses-list" class="view">
+                <header class="flex items-center justify-between mb-4"><button data-view="view-dashboard" class="nav-btn p-2 rounded-full hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m15 18-6-6 6-6"/></svg></button><h2 class="text-2xl font-bold">Despesas</h2><button id="add-expense-btn" class="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button></header>
+                <div id="expenses-list-container" class="space-y-3"></div>
+            </div>
+            
+            <div id="view-expense-form" class="view">
+                <header class="flex items-center mb-4"><button data-view="view-expenses-list" class="nav-btn p-2 rounded-full hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m15 18-6-6 6-6"/></svg></button><h2 id="expense-form-title" class="text-2xl font-bold ml-4">Nova Despesa</h2></header>
+                <form id="expense-form" class="space-y-4 bg-white p-6 rounded-lg shadow"><input type="hidden" id="expense-id"><div><label for="expense-description" class="block font-medium mb-1">Descrição</label><input type="text" id="expense-description" class="w-full p-2 border rounded-md" required></div><div><label for="expense-value" class="block font-medium mb-1">Valor</label><input type="number" step="0.01" id="expense-value" class="w-full p-2 border rounded-md" required></div><div><label for="expense-date" class="block font-medium mb-1">Data</label><input type="date" id="expense-date" class="w-full p-2 border rounded-md" required></div><div class="flex gap-4"><button type="button" id="delete-expense-btn" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 hidden">Excluir</button><button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Salvar Despesa</button></div></form>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+        <div id="modal-content" class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md"></div>
+    </div>
+    
+    <div id="pdf-container">
+      <div id="pdf-content" class="bg-white text-black font-sans w-[794px]"></div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, addDoc, setDoc, deleteDoc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgC0DSPAeEhhybKqHJeSibCtM9DUMKZOM",
+            authDomain: "edilson-7b5e4.firebaseapp.com",
+            projectId: "edilson-7b5e4",
+            storageBucket: "edilson-7b5e4.appspot.com",
+            messagingSenderId: "1017782257434",
+            appId: "1:1017782257434:web:ca7d5ec3dcdc5bee364ea3"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        let userId, userSettings = {}, clientsCol, budgetsCol, expensesCol;
+        let clients = [], budgets = [], expenses = [], services = [], products = [];
+        let currentStatusFilter = 'all', currentPeriodFilter = 'month';
+
+        const loginView = document.getElementById('view-login');
+        const mainContent = document.getElementById('main-content');
+        
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                await loadUserSettings();
+                mainContent.classList.remove('hidden');
+                loginView.classList.remove('active');
+                document.getElementById('view-loading').classList.remove('active');
+                setupListeners();
+                showView('view-dashboard');
+            } else {
+                mainContent.classList.add('hidden');
+                document.getElementById('view-loading').classList.remove('active');
+                showAuthView('view-login');
+            }
+        });
+
+        function showAuthView(viewId) {
+             document.querySelectorAll('#app-container > .view').forEach(v => v.classList.remove('active'));
+             document.getElementById(viewId).classList.add('active');
+        }
+        
+        function setupListeners() {
+            clientsCol = collection(db, 'users', userId, 'clients');
+            budgetsCol = collection(db, 'users', userId, 'budgets');
+            expensesCol = collection(db, 'users', userId, 'expenses');
+            onSnapshot(clientsCol, (snapshot) => {
+                clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                clients.sort((a, b) => a.name.localeCompare(b.name));
+                if(document.getElementById('view-clients-list').classList.contains('active')) renderClientsList();
+                updateClientDropdown();
+            });
+            onSnapshot(budgetsCol, (snapshot) => {
+                budgets = snapshot.docs.map(doc => { const data = doc.data(); if(data.createdAt?.toDate) data.createdAt = data.createdAt.toDate(); if(data.scheduledAt?.toDate) data.scheduledAt = data.scheduledAt.toDate(); if(data.completedAt?.toDate) data.completedAt = data.completedAt.toDate(); if(data.paidAt?.toDate) data.paidAt = data.paidAt.toDate(); return { id: doc.id, ...data }; });
+                budgets.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                if(document.getElementById('view-budgets-list').classList.contains('active')) renderBudgets(currentStatusFilter);
+                if(document.getElementById('view-reports').classList.contains('active')) renderReports();
+                if(document.getElementById('view-dashboard').classList.contains('active')) updateNextAppointmentCard();
+                if(document.getElementById('view-client-form').classList.contains('active')) {
+                    const currentClientId = document.getElementById('client-id').value;
+                    if(currentClientId) renderClientHistory(currentClientId);
+                }
+            });
+             onSnapshot(expensesCol, (snapshot) => {
+                expenses = snapshot.docs.map(doc => { const data = doc.data(); if(data.date?.toDate) data.date = data.date.toDate(); return { id: doc.id, ...data }; });
+                if(document.getElementById('view-expenses-list').classList.contains('active')) renderExpensesList();
+                if(document.getElementById('view-reports').classList.contains('active')) renderReports();
+            });
+        }
+        
+        const formatCurrency = (value) => {
+            if (typeof value !== 'number') return 'R$ 0,00';
+            return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        };
+        async function loadUserSettings() {
+            if (!userId) return;
+            const settingsDocRef = doc(db, `users/${userId}/settings/profile`);
+            const docSnap = await getDoc(settingsDocRef);
+            userSettings = docSnap.exists() ? docSnap.data() : { phone: 'Seu Telefone', logoUrl: 'https://placehold.co/200x100/cccccc/ffffff?text=Logo', primaryColor: 'indigo' };
+            applySettings();
+        }
+        function applySettings() {
+             document.getElementById('logo-main').src = userSettings.logoUrl;
+             applyThemeColor(userSettings.primaryColor || 'indigo');
+        }
+        
+        function applyThemeColor(newColor) {
+            const defaultColor = 'indigo';
+            const elements = document.querySelectorAll(`[class*="bg-${defaultColor}-"], [class*="hover\\:bg-${defaultColor}-"], [class*="text-${defaultColor}-"], [class*="border-${defaultColor}-"]`);
+            
+            elements.forEach(el => {
+                const newClasses = Array.from(el.classList).map(cls => cls.includes(defaultColor) ? cls.replace(defaultColor, newColor) : cls);
+                el.className = newClasses.join(' ');
+            });
+        }
+        
+        function showView(viewId, id = null, clientId = null) {
+            document.querySelectorAll('#main-content .view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            if (viewId === 'view-client-form') prepareClientForm(clientId);
+            if (viewId === 'view-budget-form') prepareBudgetForm(id);
+            if (viewId === 'view-expense-form') prepareExpenseForm(id);
+            if (viewId === 'view-clients-list') renderClientsList();
+            if (viewId === 'view-budgets-list') renderBudgets(currentStatusFilter);
+            if (viewId === 'view-reports') renderReports();
+            if (viewId === 'view-expenses-list') renderExpensesList();
+            if (viewId === 'view-dashboard') {
+                applySettings();
+                updateNextAppointmentCard();
+            }
+        }
+        
+        function renderClientsList() {
+            const container = document.getElementById('clients-list-container');
+            container.innerHTML = '';
+            if (clients.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 mt-8">Nenhum cliente cadastrado ainda. Clique em '+' para começar.</p>`;
+            } else {
+                clients.forEach(client => { container.innerHTML += `<div class="bg-white p-4 rounded-lg shadow-sm flex justify-between items-center cursor-pointer hover:bg-gray-50" data-client-id="${client.id}"><div><p class="font-bold">${client.name}</p><p class="text-sm text-gray-600">${client.phone || 'Sem telefone'}</p></div><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-gray-400"><path d="m9 18 6-6-6-6"/></svg></div>`; });
+            }
+        }
+        
+        function prepareClientForm(clientId) {
+            const form = document.getElementById('client-form');
+            form.reset();
+            const deleteBtn = document.getElementById('delete-client-btn');
+            const historyContainer = document.getElementById('client-history-container');
+            if (clientId) {
+                const client = clients.find(c => c.id === clientId);
+                if (client) {
+                    document.getElementById('client-form-title').textContent = 'Editar Cliente';
+                    document.getElementById('client-id').value = client.id;
+                    form['client-name'].value = client.name;
+                    form['client-phone'].value = client.phone || '';
+                    form['client-data'].value = client.data || '';
+                    deleteBtn.classList.remove('hidden');
+                    document.getElementById('toggle-history-btn').classList.remove('hidden');
+                    renderClientHistory(clientId);
+                }
+            } else {
+                document.getElementById('client-form-title').textContent = 'Novo Cliente';
+                document.getElementById('client-id').value = '';
+                deleteBtn.classList.add('hidden');
+                document.getElementById('toggle-history-btn').classList.add('hidden');
+                historyContainer.innerHTML = '';
+                historyContainer.classList.add('hidden');
+            }
+        }
+        function renderClientHistory(clientId) {
+            const container = document.getElementById('client-history-container');
+            const clientBudgets = budgets.filter(b => b.clientId === clientId);
+            container.innerHTML = '';
+            if (clientBudgets.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500">Nenhum orçamento para este cliente.</p>';
+            } else {
+                clientBudgets.forEach(budget => {
+                    const statusInfo = getStatusInfo(budget.status);
+                    let dateInfo = `<p class="text-xs text-gray-500">${budget.createdAt.toLocaleDateString('pt-BR')}</p>`;
+                    if(budget.status === 'paid' && budget.paidAt){ dateInfo += `<p class="text-xs text-green-600 font-semibold">Pago em: ${budget.paidAt.toLocaleDateString('pt-BR')}</p>`; }
+                    const card = `<div class="bg-gray-50 p-3 rounded-lg flex justify-between items-center"><div class="flex-grow cursor-pointer budget-history-item" data-id="${budget.id}"><p class="font-semibold">${budget.title || `Orçamento`}</p>${dateInfo}</div><div class="flex items-center"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusInfo.bgColor} ${statusInfo.textColor}">${statusInfo.label}</span><button class="pdf-budget-btn p-2 hover:bg-gray-200 rounded-full ml-2" data-id="${budget.id}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></button></div></div>`;
+                    container.innerHTML += card;
+                });
+            }
+        }
+        
+        function renderBudgets(statusFilter) {
+            const container = document.getElementById('budgets-list-container');
+            let filtered = budgets.filter(b => b.status !== 'paid');
+            if (statusFilter !== 'all') filtered = filtered.filter(b => b.status === statusFilter);
+            container.innerHTML = '';
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 mt-8">Nenhum orçamento para este filtro.</p>`;
+            } else {
+                 filtered.forEach(budget => {
+                    const client = clients.find(c => c.id === budget.clientId);
+                    const clientName = client?.name || budget.clientName || 'Cliente';
+                    const statusInfo = getStatusInfo(budget.status);
+                    const dateInfo = (budget.status === 'scheduled' && budget.scheduledAt) ? `<p class="text-sm font-semibold">${budget.scheduledAt.toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</p>` : '';
+                    container.innerHTML += `<div class="bg-white p-4 rounded-lg shadow-sm"><div class="flex justify-between items-start"><div><p class="font-bold text-lg">${budget.title || 'Orçamento sem título'}</p><p class="text-sm text-gray-600">${clientName}</p><p class="text-lg font-semibold text-gray-800 mt-2">${formatCurrency(budget.totalAmount)}</p>${dateInfo}</div><div class="text-right"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusInfo.bgColor} ${statusInfo.textColor}">${statusInfo.label}</span><div class="mt-2 flex gap-2"><button class="edit-budget-btn p-2 hover:bg-gray-200 rounded-full" data-id="${budget.id}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button><button class="pdf-budget-btn p-2 hover:bg-gray-200 rounded-full" data-id="${budget.id}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></button><button class="status-budget-btn p-2 hover:bg-gray-200 rounded-full" data-id="${budget.id}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div></div></div></div>`;
+                });
+            }
+        }
+
+        function prepareBudgetForm(budgetId) {
+            const form = document.getElementById('budget-form');
+            form.reset();
+            services = []; products = [];
+            if(budgetId) {
+                const budget = budgets.find(b => b.id === budgetId);
+                if (budget) {
+                    document.getElementById('budget-form-title').textContent = "Editar Orçamento";
+                    document.getElementById('budget-id').value = budget.id;
+                    document.getElementById('budget-title').value = budget.title || '';
+                    document.getElementById('budget-client-id').value = budget.clientId;
+                    services = budget.services || [];
+                    products = budget.products || [];
+                    document.getElementById('total-services-manual').value = budget.totalServicesManual || '';
+                    document.getElementById('total-products-manual').value = budget.totalProductsManual || '';
+                    document.querySelector(`input[name="pdf-presentation"][value="${budget.presentation || 'detailed'}"]`).checked = true;
+                }
+            } else {
+                document.getElementById('budget-form-title').textContent = "Novo Orçamento";
+                document.getElementById('budget-id').value = '';
+            }
+            renderItems('service'); renderItems('product'); updateTotal();
+            document.getElementById('new-client-fields').classList.add('hidden');
+        }
+        
+        function updateClientDropdown() {
+            const select = document.getElementById('budget-client-id');
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = `<option value="">-- Selecione um Cliente --</option><option value="new">-- Cadastrar Novo Cliente --</option>`;
+            clients.forEach(c => select.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+            select.value = currentVal;
+        }
+        
+        function renderItems(type) {
+            const container = document.getElementById(`${type}s-container`);
+            const items = type === 'service' ? services : products;
+            container.innerHTML = items.map((item, index) => `<div class="flex gap-2 items-center" data-index="${index}"><input type="text" value="${item.description}" class="item-desc w-full p-2 border rounded-md" placeholder="Descrição"><input type="number" value="${item.quantity}" class="item-qty w-20 p-2 border rounded-md" placeholder="Qtd"><input type="number" step="0.01" value="${item.value || ''}" class="item-val w-24 p-2 border rounded-md" placeholder="Valor"><button type="button" class="remove-item-btn text-red-500 p-1 rounded-full hover:bg-red-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 pointer-events-none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></div>`).join('');
+            document.getElementById(`${type}s-total-manual-container`).classList.toggle('hidden', items.length === 0);
+            updateTotal();
+        }
+        
+        function updateTotal() {
+            const sManual = parseFloat(document.getElementById('total-services-manual').value), pManual = parseFloat(document.getElementById('total-products-manual').value);
+            const sTotal = !isNaN(sManual) ? sManual : services.reduce((s, i) => s + (i.value || 0) * (i.quantity || 1), 0);
+            const pTotal = !isNaN(pManual) ? pManual : products.reduce((s, i) => s + (i.value || 0) * (i.quantity || 1), 0);
+            document.getElementById('total-budget-amount').textContent = formatCurrency(sTotal + pTotal);
+        }
+        
+        async function createAndSharePdf(budgetId) {
+            const budget = budgets.find(b => b.id === budgetId);
+            if (!budget) return;
+            const client = clients.find(c => c.id === budget.clientId), clientName = client?.name || budget.clientName;
+            const pdfContainer = document.getElementById('pdf-content'), showDetailed = budget.presentation === 'detailed';
+            const listRow = (item) => `<li class="py-1">${item.quantity}x ${item.description}</li>`;
+            const tableRow = (item) => `<tr class="border-b border-gray-200"><td class="py-2 pr-2">${item.quantity}x ${item.description}</td><td class="py-2 text-right">${formatCurrency(item.value * item.quantity)}</td></tr>`;
+            const createSection = (title, items) => {
+                if (!items || items.length === 0) return '';
+                const itemsHtml = showDetailed ? `<thead><tr class="text-left text-gray-500"><th class="w-4/5 pb-1">${title}</th><th class="pb-1 text-right">Valor</th></tr></thead><tbody>${items.map(tableRow).join('')}</tbody>` : `<ul>${items.map(listRow).join('')}</ul>`;
+                return `<h3 class="text-xl font-bold mt-8 mb-2">${title}</h3><table class="w-full text-sm">${itemsHtml}</table>`;
+            };
+            pdfContainer.innerHTML = `<div class="p-10 font-sans"><header class="flex justify-between items-center mb-10"><img id="pdf-logo" src="${userSettings.logoUrl}" class="h-20 object-contain" crossorigin="anonymous"><div class="text-right"><p class="text-gray-600">Nº do orçamento</p><p class="font-bold text-gray-800">${budget.id.substring(0, 8).toUpperCase()}</p><p class="text-gray-600 mt-2">Data</p><p class="font-bold text-gray-800">${new Date().toLocaleDateString('pt-BR')}</p></div></header><div class="border border-gray-300 p-4 rounded-md mb-8"><p class="font-bold text-gray-800">Cliente: ${clientName}</p><p class="text-gray-600">${client?.phone || ''}</p></div><h2 class="text-center text-2xl font-bold text-gray-800 my-8">ORÇAMENTO</h2><div class="border border-gray-300 p-6 rounded-md">${createSection('Produtos', budget.products)}${createSection('Serviços', budget.services)}</div><div class="mt-12 text-right"><p class="text-gray-600">VALOR TOTAL</p><p class="text-4xl font-bold text-gray-900">${formatCurrency(budget.totalAmount)}</p></div><footer class="mt-16 pt-4 border-t text-center text-xs text-gray-500"><p class="font-semibold">Contato: ${userSettings.phone}</p><p class="mt-1">Orçamento válido por 15 dias.</p></footer></div>`;
+            
+            const logoEl = pdfContainer.querySelector('#pdf-logo');
+            logoEl.onload = async () => {
+                try {
+                    const canvas = await html2canvas(pdfContainer, { scale: 2, useCORS: true });
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'pt', 'a4');
+                    const pdfWidth = pdf.internal.pageSize.getWidth(), pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    const pdfFile = new File([pdf.output('blob')], `Orçamento-${clientName.replace(/\s/g, '_')}.pdf`, { type: 'application/pdf' });
+                    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) { await navigator.share({ title: `Orçamento ${clientName}`, text: `Olá, ${clientName}! Segue o orçamento.`, files: [pdfFile] }); } else { pdf.save(`Orçamento-${clientName.replace(/\s/g, '_')}.pdf`); }
+                } catch (error) { console.error("Erro ao gerar PDF:", error); }
+            };
+            if(logoEl.complete) logoEl.onload();
+        }
+        function showStatusModal(budgetId) {
+            const budget = budgets.find(b => b.id === budgetId);
+            if (!budget) return;
+            const modal = document.getElementById('modal'), modalContent = document.getElementById('modal-content');
+            let content = `<h3 class="text-xl font-bold mb-4">Alterar Status</h3><p class="mb-4">Cliente: <span class="font-semibold">${budget.clientName}</span></p><div class="space-y-2">`;
+            if (budget.status === 'pending') content += `<button class="modal-action-btn w-full text-left p-3 bg-gray-100 rounded hover:bg-yellow-100" data-action="schedule" data-id="${budgetId}">Agendar Serviço</button>`;
+            if (budget.status === 'scheduled') content += `<button class="modal-action-btn w-full text-left p-3 bg-gray-100 rounded hover:bg-yellow-100" data-action="reschedule" data-id="${budgetId}">Alterar Agendamento</button>`;
+            if (budget.status === 'pending' || budget.status === 'scheduled') content += `<button class="modal-action-btn w-full text-left p-3 bg-gray-100 rounded hover:bg-blue-100" data-action="complete" data-id="${budgetId}">Marcar como Concluído</button>`;
+            if (budget.status === 'completed') content += `<button class="modal-action-btn w-full text-left p-3 bg-gray-100 rounded hover:bg-green-100" data-action="pay" data-id="${budgetId}">Marcar como Pago</button>`;
+            content += `</div><button class="modal-action-btn w-full text-left p-3 mt-4 bg-red-50 text-red-700 rounded hover:bg-red-100" data-action="delete" data-id="${budgetId}">Excluir Orçamento</button><button id="close-modal-btn" class="mt-4 w-full p-2 bg-gray-200 rounded hover:bg-gray-300">Cancelar</button>`;
+            modalContent.innerHTML = content;
+            modal.classList.remove('hidden');
+        }
+        async function handleStatusAction(budgetId, action) {
+            const modalContent = document.getElementById('modal-content');
+            if (action === 'schedule' || action === 'reschedule') {
+                const budget = budgets.find(b => b.id === budgetId), currentSchedule = budget.scheduledAt ? budget.scheduledAt.toISOString().slice(0, 16) : '';
+                modalContent.innerHTML = `<h3 class="font-bold mb-2">${action === 'schedule' ? 'Agendar' : 'Alterar'} Serviço</h3><input type="datetime-local" id="schedule-datetime" class="w-full p-2 border rounded" value="${currentSchedule}"><div class="flex gap-2 mt-4"><button id="cancel-schedule" class="w-full p-2 bg-gray-300 rounded">Cancelar</button><button id="confirm-schedule" class="w-full p-2 bg-indigo-600 text-white rounded">Confirmar</button></div>`;
+                document.getElementById('confirm-schedule').onclick = async () => {
+                    const scheduledAt = document.getElementById('schedule-datetime').value;
+                    if (scheduledAt) { await setDoc(doc(budgetsCol, budgetId), { status: 'scheduled', scheduledAt: Timestamp.fromDate(new Date(scheduledAt)) }, { merge: true }); closeModal(); }
+                };
+                 document.getElementById('cancel-schedule').onclick = () => showStatusModal(budgetId);
+            } else if (action === 'complete') { await setDoc(doc(budgetsCol, budgetId), { status: 'completed', completedAt: Timestamp.now() }, { merge: true }); closeModal();
+            } else if (action === 'pay') {
+                const budget = budgets.find(b => b.id === budgetId);
+                modalContent.innerHTML = `<h3 class="font-bold mb-2">Confirmar Pagamento</h3><label for="paid-amount" class="block text-sm">Valor Pago</label><input type="number" step="0.01" id="paid-amount" class="w-full p-2 border rounded" value="${budget.totalAmount}"><div class="flex gap-2 mt-4"><button id="cancel-payment" class="w-full p-2 bg-gray-300 rounded">Cancelar</button><button id="confirm-payment" class="w-full p-2 bg-green-600 text-white rounded">Confirmar</button></div>`;
+                document.getElementById('confirm-payment').onclick = async () => {
+                    const paidAmount = parseFloat(document.getElementById('paid-amount').value);
+                    if (!isNaN(paidAmount)) { await setDoc(doc(budgetsCol, budgetId), { status: 'paid', paidAt: Timestamp.now(), paidAmount }, { merge: true }); closeModal(); }
+                };
+                document.getElementById('cancel-payment').onclick = () => showStatusModal(budgetId);
+            } else if (action === 'delete') { if (confirm('Tem certeza?')) { await deleteDoc(doc(budgetsCol, budgetId)); closeModal(); } }
+        }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+        function renderReports() {
+            let startDate, endDate = new Date();
+            endDate.setHours(23, 59, 59, 999);
+            if(currentPeriodFilter === 'month') { startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1); startDate.setHours(0, 0, 0, 0); }
+            else if (currentPeriodFilter === 'week') { startDate = new Date(); startDate.setDate(endDate.getDate() - 6); startDate.setHours(0, 0, 0, 0); }
+            else if (currentPeriodFilter === 'custom') { const sd = document.getElementById('start-date').value, ed = document.getElementById('end-date').value; if (!sd || !ed) return; startDate = new Date(sd + "T00:00:00"); endDate = new Date(ed + "T23:59:59"); }
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
+            const paidBudgets = budgets.filter(b => b.status === 'paid' && b.paidAt >= startDate && b.paidAt <= endDate);
+            const totalBilled = paidBudgets.reduce((s, b) => s + (b.paidAmount || 0), 0);
+            const periodExpenses = (expenses || []).filter(e => e.date >= startDate && e.date <= endDate);
+            const totalExpenses = periodExpenses.reduce((s, e) => s + (e.value || 0), 0);
+            document.getElementById('report-total-billed').textContent = formatCurrency(totalBilled);
+            document.getElementById('report-total-expenses').textContent = formatCurrency(totalExpenses);
+            document.getElementById('report-net-profit').textContent = formatCurrency(totalBilled - totalExpenses);
+
+            const detailsContainer = document.getElementById('details-list-container');
+            const transactions = [
+                ...paidBudgets.map(b => ({ type: 'receita', date: b.paidAt, description: b.title || 'Orçamento Pago', value: b.paidAmount })),
+                ...periodExpenses.map(e => ({ type: 'despesa', date: e.date, description: e.description, value: e.value })),
+            ].sort((a,b) => b.date - a.date);
+            
+            detailsContainer.innerHTML = '';
+            if(transactions.length === 0) {
+                 detailsContainer.innerHTML = '<p class="text-center text-gray-500 mt-4">Nenhuma transação no período.</p>';
+            } else {
+                detailsContainer.innerHTML = transactions.map(t => `
+                    <div class="flex justify-between items-center bg-gray-50 p-2 rounded">
+                        <div>
+                            <p class="font-semibold">${t.description}</p>
+                            <p class="text-sm text-gray-500">${t.date.toLocaleDateString('pt-BR')}</p>
+                        </div>
+                        <p class="font-bold ${t.type === 'receita' ? 'text-green-700' : 'text-red-700'}">${t.type === 'receita' ? '+' : '-'} ${formatCurrency(t.value)}</p>
+                    </div>
+                `).join('');
+            }
+        }
+        function updateNextAppointmentCard() {
+            const scheduled = budgets.filter(b => b.status === 'scheduled' && b.scheduledAt > new Date()).sort((a,b) => a.scheduledAt - b.scheduledAt);
+            const card = document.getElementById('next-appointment-card');
+            if (scheduled.length > 0) {
+                document.getElementById('next-appointment-details').innerHTML = `<span class="font-bold">${scheduled[0].title || 'Agendamento'}</span> - ${scheduled[0].scheduledAt.toLocaleString('pt-BR', {weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'})}`;
+                card.classList.remove('hidden');
+            } else { card.classList.add('hidden'); }
+        }
+        function getStatusInfo(status) {
+            const statuses = { pending: { label: 'Em Aberto', bgColor: 'bg-yellow-100', textColor: 'text-yellow-800' }, scheduled: { label: 'Agendado', bgColor: 'bg-blue-100', textColor: 'text-blue-800' }, completed: { label: 'Concluído', bgColor: 'bg-purple-100', textColor: 'text-purple-800' }, paid: { label: 'Pago', bgColor: 'bg-green-100', textColor: 'text-green-800' } };
+            return statuses[status] || { label: 'Desconhecido', bgColor: 'bg-gray-100', textColor: 'text-gray-800' };
+        }
+        function renderExpensesList() {
+            const container = document.getElementById('expenses-list-container');
+            container.innerHTML = '';
+            if (expenses.length === 0) { container.innerHTML = `<p class="text-center text-gray-500 mt-8">Nenhuma despesa registada.</p>`; }
+            else { expenses.sort((a,b) => b.date - a.date).forEach(expense => { container.innerHTML += `<div class="bg-white p-4 rounded-lg shadow-sm flex justify-between items-center"><div class="cursor-pointer expense-item flex-grow" data-id="${expense.id}"><p class="font-bold">${expense.description}</p><p class="text-sm text-gray-500">${expense.date.toLocaleDateString('pt-BR')}</p></div><div class="flex items-center gap-2"><p class="font-semibold text-red-600">${formatCurrency(expense.value)}</p><button class="delete-expense-btn p-2 hover:bg-gray-200 rounded-full" data-id="${expense.id}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-red-500"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></div></div>`; }); }
+        }
+        function prepareExpenseForm(expenseId) {
+            const form = document.getElementById('expense-form');
+            form.reset();
+            const deleteBtn = document.getElementById('delete-expense-btn');
+            if (expenseId) {
+                const expense = expenses.find(e => e.id === expenseId);
+                if (expense) {
+                    document.getElementById('expense-form-title').textContent = 'Editar Despesa';
+                    document.getElementById('expense-id').value = expense.id;
+                    form['expense-description'].value = expense.description;
+                    form['expense-value'].value = expense.value;
+                    form['expense-date'].valueAsDate = expense.date;
+                    deleteBtn.classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('expense-form-title').textContent = 'Nova Despesa';
+                document.getElementById('expense-id').value = '';
+                deleteBtn.classList.add('hidden');
+            }
+        }
+        document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); signInWithEmailAndPassword(auth, e.target['login-email'].value, e.target['login-password'].value).catch(err => alert(err.message)); });
+        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+        document.getElementById('app-container').addEventListener('click', (e) => {
+            const target = e.target.closest('button, div[data-client-id]');
+            if (!target) return;
+            if (target.matches('.nav-btn')) return showView(target.dataset.view);
+            if (target.matches('#add-client-btn')) return showView('view-client-form');
+            if (target.matches('#add-expense-btn')) return showView('view-expense-form');
+            if (target.matches('.expense-item')) return showView('view-expense-form', target.dataset.id);
+            if (target.matches('.budget-history-item')) return showView('view-budget-form', target.dataset.id);
+            if (target.matches('[data-client-id]')) return showView('view-client-form', null, target.dataset.clientId);
+            const budgetActionBtn = target.closest('.edit-budget-btn, .pdf-budget-btn, .status-budget-btn');
+            if(budgetActionBtn) {
+                 const budgetId = budgetActionBtn.dataset.id;
+                 if (budgetActionBtn.classList.contains('edit-budget-btn')) showView('view-budget-form', budgetId);
+                 if (budgetActionBtn.classList.contains('pdf-budget-btn')) createAndSharePdf(budgetId);
+                 if (budgetActionBtn.classList.contains('status-budget-btn')) showStatusModal(budgetId);
+                 return;
+            }
+            if (target.matches('.filter-btn-status')) {
+                const color = userSettings.primaryColor || 'indigo';
+                document.querySelectorAll('#budget-filters .filter-btn-status').forEach(b => { b.classList.remove(`bg-${color}-600`, 'text-white'); b.classList.add('bg-gray-200'); });
+                target.classList.add(`bg-${color}-600`, 'text-white');
+                target.classList.remove('bg-gray-200');
+                currentStatusFilter = target.dataset.status;
+                renderBudgets(currentStatusFilter);
+            }
+             if(target.matches('.filter-btn-period')) {
+                const color = userSettings.primaryColor || 'indigo';
+                document.querySelectorAll('#report-filters .filter-btn-period').forEach(b => { b.classList.remove(`bg-${color}-600`, 'text-white'); b.classList.add('bg-gray-200'); });
+                target.classList.add(`bg-${color}-600`, 'text-white');
+                target.classList.remove('bg-gray-200');
+                currentPeriodFilter = target.dataset.period;
+                document.getElementById('custom-period-fields').classList.toggle('hidden', currentPeriodFilter !== 'custom');
+                renderReports();
+            }
+            if (target.matches('#delete-client-btn')) {
+                const id = document.getElementById('client-id').value;
+                if (id && confirm('Tem certeza?')) { deleteDoc(doc(clientsCol, id)).then(() => showView('view-clients-list')); }
+            }
+            if (target.matches('.delete-expense-btn')) {
+                const id = target.dataset.id;
+                if (id && confirm('Tem certeza que deseja excluir esta despesa?')) { deleteDoc(doc(expensesCol, id)); }
+            }
+            if (target.matches('#add-service-btn')) { services.push({ description: '', quantity: 1, value: null }); renderItems('service'); }
+            if (target.matches('#add-product-btn')) { products.push({ description: '', quantity: 1, value: null }); renderItems('product'); }
+             if (target.matches('.remove-item-btn')) {
+                const type = target.closest('#services-container') ? 'service' : 'product';
+                const index = target.closest('[data-index]').dataset.index;
+                (type === 'service' ? services : products).splice(index, 1);
+                renderItems(type);
+            }
+            if(target.matches('#toggle-history-btn')){
+                document.getElementById('client-history-container').classList.toggle('hidden');
+                target.textContent = target.textContent === 'Ver Histórico de Orçamentos' ? 'Ocultar Histórico' : 'Ver Histórico de Orçamentos';
+            }
+        });
+        document.getElementById('client-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('client-id').value;
+            const clientData = { name: document.getElementById('client-name').value, phone: document.getElementById('client-phone').value, data: document.getElementById('client-data').value };
+            try { if (id) await setDoc(doc(clientsCol, id), clientData, {merge: true}); else await addDoc(clientsCol, clientData); showView('view-clients-list'); }
+            catch (error) { console.error("Erro ao salvar cliente: ", error); }
+        });
+        document.getElementById('expense-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('expense-id').value;
+            const expenseData = { description: document.getElementById('expense-description').value, value: parseFloat(document.getElementById('expense-value').value), date: Timestamp.fromDate(new Date(document.getElementById('expense-date').value + 'T00:00:00')) };
+            try { if (id) await setDoc(doc(expensesCol, id), expenseData); else await addDoc(expensesCol, expenseData); showView('view-expenses-list'); }
+            catch (error) { console.error("Erro ao salvar despesa: ", error); }
+        });
+        document.getElementById('budget-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            let clientId = document.getElementById('budget-client-id').value, clientName = '';
+            if (clientId === 'new') {
+                const newName = document.getElementById('budget-new-client-name').value;
+                if (!newName) return alert('Informe o nome do novo cliente.');
+                const newClient = { name: newName, phone: document.getElementById('budget-new-client-phone').value, data: '' };
+                const docRef = await addDoc(clientsCol, newClient);
+                clientId = docRef.id; clientName = newName;
+            } else if (clientId) { clientName = clients.find(c => c.id === clientId)?.name; }
+            else { return alert('Selecione um cliente.'); }
+            const sManual = document.getElementById('total-services-manual').value ? parseFloat(document.getElementById('total-services-manual').value) : null;
+            const pManual = document.getElementById('total-products-manual').value ? parseFloat(document.getElementById('total-products-manual').value) : null;
+            const sTotal = sManual ?? services.reduce((s, i) => s + (i.value || 0) * (i.quantity || 1), 0);
+            const pTotal = pManual ?? products.reduce((s, i) => s + (i.value || 0) * (i.quantity || 1), 0);
+            const totalAmount = sTotal + pTotal;
+            const budgetTitle = document.getElementById('budget-title').value;
+            const budgetId = document.getElementById('budget-id').value;
+            const budgetData = { title: budgetTitle, clientId, clientName, services: services.filter(s => s.description), products: products.filter(p => p.description), totalServicesManual: sManual, totalProductsManual: pManual, totalAmount, presentation: document.querySelector('input[name="pdf-presentation"]:checked').value, updatedAt: Timestamp.now() };
+            try {
+                if (budgetId) { await setDoc(doc(budgetsCol, budgetId), budgetData, { merge: true }); }
+                else { budgetData.createdAt = Timestamp.now(); budgetData.status = 'pending'; await addDoc(budgetsCol, budgetData); }
+                showView('view-budgets-list');
+            } catch (error) { console.error("Erro ao salvar orçamento: ", error); }
+        });
+        document.getElementById('budget-form').addEventListener('input', (e) => {
+            const target = e.target;
+            if(target.matches('.item-desc, .item-qty, .item-val')) {
+                const type = target.closest('#services-container') ? 'service' : 'product';
+                const items = type === 'service' ? services : products;
+                const index = target.closest('[data-index]').dataset.index;
+                const parent = target.closest('[data-index]');
+                items[index] = { description: parent.querySelector('.item-desc').value, quantity: parseFloat(parent.querySelector('.item-qty').value) || 1, value: parent.querySelector('.item-val').value ? parseFloat(parent.querySelector('.item-val').value) : null };
+            }
+            updateTotal();
+        });
+        document.getElementById('custom-period-fields').addEventListener('change', renderReports);
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target.id === 'modal' || e.target.id === 'close-modal-btn') closeModal();
+            const actionBtn = e.target.closest('.modal-action-btn');
+            if(actionBtn) handleStatusAction(actionBtn.dataset.id, actionBtn.dataset.action);
+        });
+        document.getElementById('budget-client-id').addEventListener('change', (e) => {
+            document.getElementById('new-client-fields').classList.toggle('hidden', e.target.value !== 'new');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('end-date').value = today;
+            const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+            document.getElementById('start-date').value = firstDayOfMonth;
+        });
+
+    </script>
+</body>
+</html>
