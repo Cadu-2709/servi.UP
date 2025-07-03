@@ -58,10 +58,10 @@
                             <label for="login-password" class="block font-medium mb-1">Senha</label>
                             <input type="password" id="login-password" class="w-full p-2 border rounded-md" required>
                         </div>
-                        <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">Entrar</button>
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Entrar</button>
                     </form>
                     <p class="text-center mt-4 text-sm">
-                        Não tem uma conta? <a href="https://w.app/k7auue" class="text-indigo-600 hover:underline">Entre em contato</a>
+                        Não tem uma conta? <a href="mailto:seu-email-de-suporte@exemplo.com" class="text-indigo-600 hover:underline">Contacte o suporte</a>
                     </p>
                 </div>
             </div>
@@ -121,7 +121,7 @@
                     <button data-view="view-clients-list" class="nav-btn p-2 rounded-full hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m15 18-6-6 6-6"/></svg></button>
                     <h2 id="client-form-title" class="text-2xl font-bold ml-4">Novo Cliente</h2>
                 </header>
-                <form id="client-form" class="space-y-4 bg-white p-6 rounded-lg shadow"><input type="hidden" id="client-id"><div><label for="client-name" class="block font-medium mb-1">Nome do Cliente</label><input type="text" id="client-name" class="w-full p-2 border rounded-md" required></div><div><label for="client-phone" class="block font-medium mb-1">Celular (Opcional)</label><input type="tel" id="client-phone" class="w-full p-2 border rounded-md"></div><div><label for="client-data" class="block font-medium mb-1">Dados (Senhas e informações)</label><textarea id="client-data" rows="4" class="w-full p-2 border rounded-md"></textarea></div><div class="flex gap-4"><button type="button" id="delete-client-btn" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 hidden">Excluir</button><button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Salvar Cliente</button></div></form>
+                <form id="client-form" class="space-y-4 bg-white p-6 rounded-lg shadow"><input type="hidden" id="client-id"><div><label for="client-name" class="block font-medium mb-1">Nome do Cliente</label><input type="text" id="client-name" class="w-full p-2 border rounded-md" required></div><div><label for="client-phone" class="block font-medium mb-1">Celular (Opcional)</label><input type="tel" id="client-phone" class="w-full p-2 border rounded-md"></div><div><label for="client-data" class="block font-medium mb-1">Dados (Senhas, DVR, etc.)</label><textarea id="client-data" rows="4" class="w-full p-2 border rounded-md" placeholder="Ex: DVR: intelbras_123 / senha1234"></textarea></div><div class="flex gap-4"><button type="button" id="delete-client-btn" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 hidden">Excluir</button><button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Salvar Cliente</button></div></form>
                 
                 <div class="mt-8">
                     <button id="toggle-history-btn" class="w-full bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-md hover:bg-gray-300 mb-4">Ver Histórico de Orçamentos</button>
@@ -133,10 +133,10 @@
                 <header class="flex items-center mb-4"><button data-view="view-dashboard" class="nav-btn p-2 rounded-full hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="m15 18-6-6 6-6"/></svg></button><h2 id="budget-form-title" class="text-2xl font-bold ml-4">Novo Orçamento</h2></header>
                 <form id="budget-form" class="space-y-6 bg-white p-6 rounded-lg shadow"><input type="hidden" id="budget-id">
                     <div>
-                        <label for="budget-title" class="block font-medium mb-1">Título do Orçamento <span class="text-gray-500 text-sm"></span></label>
-                        <input type="text" id="budget-title" class="w-full p-2 border rounded-md" required>
+                        <label for="budget-title" class="block font-medium mb-1">Título do Orçamento <span class="text-gray-500 text-sm">(Uso Interno)</span></label>
+                        <input type="text" id="budget-title" class="w-full p-2 border rounded-md" placeholder="Ex: Instalação Câmeras Condomínio" required>
                     </div>
-                    <div><label for="budget-client-id" class="block font-medium mb-1">Cliente</label><select id="budget-client-id" class="w-full p-2 border rounded-md" required><option value="">-- Selecione um Cliente --</option><option value="new">-- Cadastrar Novo Cliente --</option></select></div><div id="new-client-fields" class="hidden space-y-2 border-l-4 border-indigo-200 pl-4"><input type="text" id="budget-new-client-name" placeholder="Nome do Novo Cliente" class="w-full p-2 border rounded-md"><input type="tel" id="budget-new-client-phone" placeholder="Celular (Opcional)" class="w-full p-2 border rounded-md"></div><div class="space-y-2"><h3 class="font-bold text-lg">Serviços</h3><div id="services-container" class="space-y-2"></div><button type="button" id="add-service-btn" class="text-indigo-600 font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Adicionar Serviço</button><div id="services-total-manual-container" class="mt-2 hidden"><label for="total-services-manual" class="block font-medium text-sm">Valor Total dos Serviços (se não detalhado)</label><input type="number" step="0.01" id="total-services-manual" class="w-full p-2 border rounded-md"></div></div><div class="space-y-2"><h3 class="font-bold text-lg">Produtos</h3><div id="products-container" class="space-y-2"></div><button type="button" id="add-product-btn" class="text-indigo-600 font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Adicionar Produto</button><div id="products-total-manual-container" class="mt-2 hidden"><label for="total-products-manual" class="block font-medium text-sm">Valor Total dos Produtos (se não detalhado)</label><input type="number" step="0.01" id="total-products-manual" class="w-full p-2 border rounded-md"></div></div><div class="border-t pt-4 space-y-4"><div class="text-2xl font-bold text-right"><span>TOTAL:</span><span id="total-budget-amount">R$ 0,00</span></div><div><h4 class="font-semibold mb-2">Apresentação para o cliente no PDF:</h4><div class="flex gap-4"><label class="flex items-center"><input type="radio" name="pdf-presentation" value="detailed" class="mr-2" checked> Mostrar valores individuais</label><label class="flex items-center"><input type="radio" name="pdf-presentation" value="total_only" class="mr-2"> Ocultar valores individuais</label></div></div></div><button type="submit" class="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 font-bold">Salvar Orçamento</button></form>
+                    <div><label for="budget-client-id" class="block font-medium mb-1">Cliente</label><select id="budget-client-id" class="w-full p-2 border rounded-md" required><option value="">-- Selecione um Cliente --</option><option value="new">-- Cadastrar Novo Cliente --</option></select></div><div id="new-client-fields" class="hidden space-y-2 border-l-4 border-indigo-200 pl-4"><input type="text" id="budget-new-client-name" placeholder="Nome do Novo Cliente" class="w-full p-2 border rounded-md"><input type="tel" id="budget-new-client-phone" placeholder="Celular (Opcional)" class="w-full p-2 border rounded-md"></div><div class="space-y-2"><h3 class="font-bold text-lg">Serviços</h3><div id="services-container" class="space-y-2"></div><button type="button" id="add-service-btn" class="text-indigo-600 font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Adicionar Serviço</button><div id="services-total-manual-container" class="mt-2 hidden"><label for="total-services-manual" class="block font-medium text-sm">Valor Total dos Serviços (se não detalhado)</label><input type="number" step="0.01" id="total-services-manual" class="w-full p-2 border rounded-md" placeholder="Ex: 500.00"></div></div><div class="space-y-2"><h3 class="font-bold text-lg">Produtos</h3><div id="products-container" class="space-y-2"></div><button type="button" id="add-product-btn" class="text-indigo-600 font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Adicionar Produto</button><div id="products-total-manual-container" class="mt-2 hidden"><label for="total-products-manual" class="block font-medium text-sm">Valor Total dos Produtos (se não detalhado)</label><input type="number" step="0.01" id="total-products-manual" class="w-full p-2 border rounded-md" placeholder="Ex: 850.50"></div></div><div class="border-t pt-4 space-y-4"><div class="text-2xl font-bold text-right"><span>TOTAL:</span><span id="total-budget-amount">R$ 0,00</span></div><div><h4 class="font-semibold mb-2">Apresentação para o cliente no PDF:</h4><div class="flex gap-4"><label class="flex items-center"><input type="radio" name="pdf-presentation" value="detailed" class="mr-2" checked> Mostrar valores individuais</label><label class="flex items-center"><input type="radio" name="pdf-presentation" value="total_only" class="mr-2"> Ocultar valores individuais</label></div></div></div><button type="submit" class="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 font-bold">Salvar Orçamento</button></form>
             </div>
             
             <div id="view-budgets-list" class="view">
@@ -303,6 +303,7 @@
             form.reset();
             const deleteBtn = document.getElementById('delete-client-btn');
             const historyContainer = document.getElementById('client-history-container');
+            const toggleBtn = document.getElementById('toggle-history-btn');
             if (clientId) {
                 const client = clients.find(c => c.id === clientId);
                 if (client) {
@@ -312,14 +313,14 @@
                     form['client-phone'].value = client.phone || '';
                     form['client-data'].value = client.data || '';
                     deleteBtn.classList.remove('hidden');
-                    document.getElementById('toggle-history-btn').classList.remove('hidden');
+                    toggleBtn.classList.remove('hidden');
                     renderClientHistory(clientId);
                 }
             } else {
                 document.getElementById('client-form-title').textContent = 'Novo Cliente';
                 document.getElementById('client-id').value = '';
                 deleteBtn.classList.add('hidden');
-                document.getElementById('toggle-history-btn').classList.add('hidden');
+                toggleBtn.classList.add('hidden');
                 historyContainer.innerHTML = '';
                 historyContainer.classList.add('hidden');
             }
@@ -422,8 +423,9 @@
             };
             pdfContainer.innerHTML = `<div class="p-10 font-sans"><header class="flex justify-between items-center mb-10"><img id="pdf-logo" src="${userSettings.logoUrl}" class="h-20 object-contain" crossorigin="anonymous"><div class="text-right"><p class="text-gray-600">Nº do orçamento</p><p class="font-bold text-gray-800">${budget.id.substring(0, 8).toUpperCase()}</p><p class="text-gray-600 mt-2">Data</p><p class="font-bold text-gray-800">${new Date().toLocaleDateString('pt-BR')}</p></div></header><div class="border border-gray-300 p-4 rounded-md mb-8"><p class="font-bold text-gray-800">Cliente: ${clientName}</p><p class="text-gray-600">${client?.phone || ''}</p></div><h2 class="text-center text-2xl font-bold text-gray-800 my-8">ORÇAMENTO</h2><div class="border border-gray-300 p-6 rounded-md">${createSection('Produtos', budget.products)}${createSection('Serviços', budget.services)}</div><div class="mt-12 text-right"><p class="text-gray-600">VALOR TOTAL</p><p class="text-4xl font-bold text-gray-900">${formatCurrency(budget.totalAmount)}</p></div><footer class="mt-16 pt-4 border-t text-center text-xs text-gray-500"><p class="font-semibold">Contato: ${userSettings.phone}</p><p class="mt-1">Orçamento válido por 15 dias.</p></footer></div>`;
             
-            const logoEl = pdfContainer.querySelector('#pdf-logo');
-            logoEl.onload = async () => {
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+            const generate = async () => {
                 try {
                     const canvas = await html2canvas(pdfContainer, { scale: 2, useCORS: true });
                     const { jsPDF } = window.jspdf;
@@ -431,10 +433,18 @@
                     const pdfWidth = pdf.internal.pageSize.getWidth(), pdfHeight = (canvas.height * pdfWidth) / canvas.width;
                     pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, pdfWidth, pdfHeight);
                     const pdfFile = new File([pdf.output('blob')], `Orçamento-${clientName.replace(/\s/g, '_')}.pdf`, { type: 'application/pdf' });
-                    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) { await navigator.share({ title: `Orçamento ${clientName}`, text: `Olá, ${clientName}! Segue o orçamento.`, files: [pdfFile] }); } else { pdf.save(`Orçamento-${clientName.replace(/\s/g, '_')}.pdf`); }
+                    if (isMobile && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                        await navigator.share({ title: `Orçamento ${clientName}`, text: `Olá, ${clientName}! Segue o orçamento.`, files: [pdfFile] });
+                    } else { pdf.save(`Orçamento-${clientName.replace(/\s/g, '_')}.pdf`); }
                 } catch (error) { console.error("Erro ao gerar PDF:", error); }
-            };
-            if(logoEl.complete) logoEl.onload();
+            }
+
+            const logoEl = pdfContainer.querySelector('#pdf-logo');
+            if (logoEl.complete) {
+                generate();
+            } else {
+                logoEl.onload = generate;
+            }
         }
         function showStatusModal(budgetId) {
             const budget = budgets.find(b => b.id === budgetId);
