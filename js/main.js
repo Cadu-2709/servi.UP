@@ -196,9 +196,6 @@ function prepareClientForm(clientId) {
             document.getElementById('client-id').value = client.id;
             form['client-name'].value = client.name;
             form['client-phone'].value = client.phone || '';
-            form['client-address'].value = client.address || '';
-            form['client-doc'].value = client.doc || '';
-            form['client-notes'].value = client.notes || '';
             form['client-data'].value = client.data || '';
             deleteBtn.classList.remove('hidden');
             toggleBtn.classList.remove('hidden');
@@ -540,7 +537,6 @@ function renderExpensesList(expensesToRender) {
         clone.querySelector('.descricao-despesa').textContent = expense.description;
         clone.querySelector('.data-despesa').textContent = expense.date.toLocaleDateString('pt-BR');
         clone.querySelector('.valor-despesa').textContent = formatCurrency(expense.value);
-        clone.querySelector('.categoria-despesa').textContent = expense.category || 'Sem Categoria';
         
         container.appendChild(clone);
     });
@@ -555,8 +551,7 @@ function prepareExpenseForm(expenseId) {
         if (expense) {
             document.getElementById('expense-form-title').textContent = 'Editar Despesa';
             document.getElementById('expense-id').value = expense.id;
-            form['expense-description'].value = expense.description;
-            form['expense-category'].value = expense.category || '';
+            form['expense-description'].value = expense.description;    
             form['expense-value'].value = expense.value;
             form['expense-date'].valueAsDate = expense.date;
             deleteBtn.classList.remove('hidden');
@@ -661,9 +656,6 @@ document.getElementById('client-form').addEventListener('submit', async (e) => {
     const clientData = { 
         name: document.getElementById('client-name').value, 
         phone: document.getElementById('client-phone').value,
-        address: document.getElementById('client-address').value,
-        doc: document.getElementById('client-doc').value,
-        notes: document.getElementById('client-notes').value,
         data: document.getElementById('client-data').value 
     };
     try { 
@@ -678,7 +670,6 @@ document.getElementById('expense-form').addEventListener('submit', async (e) => 
     const id = document.getElementById('expense-id').value;
     const expenseData = { 
         description: document.getElementById('expense-description').value,
-        category: document.getElementById('expense-category').value,
         value: parseFloat(document.getElementById('expense-value').value), 
         date: Timestamp.fromDate(new Date(document.getElementById('expense-date').value + 'T00:00:00')) 
     };
