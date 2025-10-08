@@ -750,15 +750,6 @@ document.getElementById('budget-search-input').addEventListener('input', () => {
     renderBudgets();
 });
 
-document.getElementById('expense-search-input').addEventListener('input', (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    
-    const filteredExpenses = expenses.filter(expense => 
-        expense.description.toLowerCase().includes(searchTerm)
-    );
-    
-    renderExpensesList(filteredExpenses);
-});
 
 document.getElementById('calc-btn').addEventListener('click', () => {
     const percentInput = document.getElementById('calc-percent');
@@ -851,40 +842,67 @@ const generateBRCode = (pixKey, pixName, pixCity, amount, txid) => {
 };
 
 document.getElementById('pix-generate-btn').addEventListener('click', () => {
+    console.log("Botão 'Gerar QR Code' clicado.");
+    console.log("Configurações do usuário carregadas:", userSettings);
+
+    // Verificação 1: Checando se os dados PIX existem
     if (!userSettings.pixKey || !userSettings.pixName || !userSettings.pixCity) {
-        alert("Dados PIX não configurados! Por favor, adicione sua chave, nome e cidade no Firebase para testar.");
+        alert("Dados PIX não configurados! Verifique sua coleção 'settings/profile' no Firebase.");
+        console.error("Erro: Dados PIX ausentes em userSettings.", userSettings);
         return;
     }
-    const valor = parseFloat(document.getElementById('pix-valor-pix').value); // ID Corrigido
-    const txid = document.getElementById('pix-id').value.replace(/\s/g, '') || '***';
+    console.log("Dados PIX encontrados:", { 
+        key: userSettings.pixKey, 
+        name: userSettings.pixName, 
+        city: userSettings.pixCity 
+    });
+
+    const valorInput = document.getElementById('pix-valor');
+    const txidInput = document.getElementById('pix-id');
+    
+    // Verificação 2: Checando se os campos do formulário existem
+    if (!valorInput || !txidInput) {
+        console.error("Erro crítico: Input de valor ou ID do PIX não encontrado no HTML.");
+        return;
+    }
+
+    const valor = parseFloat(valorInput.value);
+    const txid = txidInput.value.replace(/\s/g, '') || '***';
+    console.log(`Valor a ser cobrado: ${valor}, TXID: ${txid}`);
+
+    // Verificação 3: Checando se o valor é válido
     if (isNaN(valor) || valor <= 0) {
         alert("Por favor, insira um valor válido.");
+        console.error("Erro: Valor inválido inserido.", valorInput.value);
         return;
     }
-    const brcodeText = generateBRCode(
-        userSettings.pixKey, 
-        userSettings.pixName, 
-        userSettings.pixCity || 'SAO PAULO',
-        valor, 
-        txid
-    );
-    const qr = qrcode(0, 'M');
-    qr.addData(brcodeText);
-    qr.make();
-    const qrCodeDataUrl = qr.createDataURL(6, 4);
-    document.getElementById('pix-qrcode-img').src = qrCodeDataUrl;
-    document.getElementById('pix-brcode-text').value = brcodeText;
-    document.getElementById('pix-result-container').classList.remove('hidden');
-});
 
-document.getElementById('pix-copy-btn').addEventListener('click', (e) => {
-    const brcodeText = document.getElementById('pix-brcode-text').value;
-    navigator.clipboard.writeText(brcodeText).then(() => {
-        e.target.textContent = "Copiado com Sucesso!";
-        setTimeout(() => {
-            e.target.textContent = "Copiar Código (Copia e Cola)";
-        }, 2000);
-    }).catch(err => {
-        alert("Erro ao copiar o código.");
-    });
+    try {
+        console.log("Iniciando geração do BRCode...");
+        const brcodeText = generateBRCode(
+            userSettings.pixKey, 
+            userSettings.pixName, 
+            userSettings.pixCity,
+            valor, 
+            txid
+        );
+        console.log("BRCode gerado com sucesso:", brcodeText);
+
+        const qr = qrcode(0, 'M');
+        qr.addData(brcodeText);
+        qr.make();
+        console.log("Objeto QR Code criado.");
+
+        const qrCodeDataUrl = qr.createDataURL(6, 4);
+        console.log("Data URL do QR Code gerada.");
+
+        document.getElementById('pix-qrcode-img').src = qrCodeDataUrl;
+        document.getElementById('pix-brcode-text').value = brcodeText;
+        document.getElementById('pix-result-container').classList.remove('hidden');
+        console.log("QR Code exibido na tela.");
+
+    } catch (error) {
+        console.error("Ocorreu um erro durante a geração do QR Code:", error);
+        alert("Ocorreu um erro inesperado ao gerar o QR Code. Verifique o console para mais detalhes.");
+    }
 });
