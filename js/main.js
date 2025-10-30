@@ -349,10 +349,12 @@ function renderItems(type) {
         const clone = template.content.cloneNode(true);
         const itemDiv = clone.querySelector('div');
         itemDiv.dataset.index = index;
-        itemDiv.querySelector('.item-desc').value = item.description || '';
+        const descTextarea = itemDiv.querySelector('.item-desc'); // MODIFICAÇÃO: Seleciona o textarea
+        descTextarea.value = item.description || '';
         itemDiv.querySelector('.item-qty').value = item.quantity || 1;
         itemDiv.querySelector('.item-val').value = item.value ?? '';
         container.appendChild(clone);
+        autoGrow(descTextarea); // MODIFICAÇÃO: Chama o autoGrow ao renderizar
     });
     
     document.getElementById(`${type}s-total-manual-container`).classList.toggle('hidden', items.length > 0);
@@ -380,7 +382,9 @@ async function createAndSharePdf(budgetId) {
         const itemsHtml = showDetailed ? `<thead><tr class="text-left text-gray-500"><th class="w-4/5 pb-1">${title}</th><th class="pb-1 text-right">Valor</th></tr></thead><tbody>${items.map(tableRow).join('')}</tbody>` : `<ul>${items.map(listRow).join('')}</ul>`;
         return `<h3 class="text-xl font-bold mt-8 mb-2">${title}</h3><table class="w-full text-sm">${itemsHtml}</table>`;
     };
-    pdfContainer.innerHTML = `<div class="p-10 font-sans"><header class="flex justify-between items-center mb-10">
+    pdfContainer.innerHTML = `<style>
+            td, li { word-break: break-all; }
+        </style><div class="p-10 font-sans"><header class="flex justify-between items-center mb-10">
 <div class="flex-shrink-0">
 <img id="pdf-logo" src="${userSettings.logoUrl}" class="h-20 object-contain" crossorigin="anonymous">
 </div>
@@ -706,8 +710,14 @@ document.getElementById('budget-form').addEventListener('submit', async (e) => {
     } catch (error) { console.error("Erro ao salvar orçamento: ", error); }
 });
 
+
+// ===================================================================
+//  MODIFICAÇÃO AQUI: CÓDIGO CORRIGIDO E UNIFICADO
+// ===================================================================
 document.getElementById('budget-form').addEventListener('input', (e) => {
     const target = e.target;
+
+    // Esta parte salva os dados enquanto você digita
     if(target.matches('.item-desc, .item-qty, .item-val')) {
         const type = target.closest('#services-container') ? 'service' : 'product';
         const items = type === 'service' ? services : products;
@@ -715,8 +725,15 @@ document.getElementById('budget-form').addEventListener('input', (e) => {
         const parent = target.closest('[data-index]');
         items[index] = { description: parent.querySelector('.item-desc').value, quantity: parseFloat(parent.querySelector('.item-qty').value) || 1, value: parent.querySelector('.item-val').value ? parseFloat(parent.querySelector('.item-val').value) : null };
     }
+
+    // Esta parte faz a caixa de texto crescer
+    if (target.matches('textarea.item-desc')) {
+        autoGrow(target);
+    }
+
     updateTotal();
 });
+// ===================================================================
 
 document.getElementById('custom-period-fields').addEventListener('change', renderReports);
 
@@ -749,7 +766,6 @@ document.getElementById('client-search-input').addEventListener('input', (e) => 
 document.getElementById('budget-search-input').addEventListener('input', () => {
     renderBudgets();
 });
-
 
 document.getElementById('calc-btn').addEventListener('click', () => {
     const percentInput = document.getElementById('calc-percent');
@@ -845,7 +861,6 @@ document.getElementById('pix-generate-btn').addEventListener('click', () => {
     console.log("Botão 'Gerar QR Code' clicado.");
     console.log("Configurações do usuário carregadas:", userSettings);
 
-    // Verificação 1: Checando se os dados PIX existem
     if (!userSettings.pixKey || !userSettings.pixName || !userSettings.pixCity) {
         alert("Dados PIX não configurados! Verifique sua coleção 'settings/profile' no Firebase.");
         console.error("Erro: Dados PIX ausentes em userSettings.", userSettings);
@@ -860,7 +875,6 @@ document.getElementById('pix-generate-btn').addEventListener('click', () => {
     const valorInput = document.getElementById('pix-valor');
     const txidInput = document.getElementById('pix-id');
     
-    // Verificação 2: Checando se os campos do formulário existem
     if (!valorInput || !txidInput) {
         console.error("Erro crítico: Input de valor ou ID do PIX não encontrado no HTML.");
         return;
@@ -870,7 +884,6 @@ document.getElementById('pix-generate-btn').addEventListener('click', () => {
     const txid = txidInput.value.replace(/\s/g, '') || '***';
     console.log(`Valor a ser cobrado: ${valor}, TXID: ${txid}`);
 
-    // Verificação 3: Checando se o valor é válido
     if (isNaN(valor) || valor <= 0) {
         alert("Por favor, insira um valor válido.");
         console.error("Erro: Valor inválido inserido.", valorInput.value);
@@ -906,3 +919,15 @@ document.getElementById('pix-generate-btn').addEventListener('click', () => {
         alert("Ocorreu um erro inesperado ao gerar o QR Code. Verifique o console para mais detalhes.");
     }
 });
+
+// ===================================================================
+// MODIFICAÇÃO FINAL: FUNÇÃO HELPER PARA AUTO-GROW
+// Esta função é chamada pelo "ouvinte" corrigido acima
+// ===================================================================
+const autoGrow = (element) => {
+    // 1. Reseta a altura para que o navegador possa calcular o tamanho real do conteúdo
+    element.style.height = 'auto'; 
+
+    // 2. Define a altura do elemento para ser exatamente igual à altura do seu conteúdo
+    element.style.height = element.scrollHeight + 'px';
+};

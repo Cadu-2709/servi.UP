@@ -22,3 +22,7 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+textarea.item-desc {
+    resize: none;       /* Desabilita o redimensionamento manual */
+    overflow-y: hidden; /* Garante que a barra de rolagem NUNCA apareça */
+}
